@@ -1,0 +1,57 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# C extensions
+*.dll
+*.pyc
+*.pyd
+*.whl
+
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+bin/
+lib/
+include/
+
+# Build artifacts
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing and coverage
+.coverage
+.tox
+htmlcov/
+.nox/
+
+# Editors and IDEs
+.idea/  # For PyCharm
+.vscode/ # For VS Code
+*.swp
+*~
+.DS_Store # macOS files
+
+# Jupyter Notebook specific
+.ipynb_checkpoints
+
+# Specific directories to ignore
+site/
+.mypy_cache/
+.pytest_cache/
+.env
