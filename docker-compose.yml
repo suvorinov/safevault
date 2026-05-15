@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   web:
     build: .
@@ -11,7 +13,7 @@ services:
     depends_on:
       - mongo
     volumes:
-      - ./app:/app/app # For development hot reload
+      - ./app:/app/app
 
   mongo:
     image: mongo:4.4

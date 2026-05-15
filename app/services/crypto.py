@@ -1,17 +1,26 @@
 """Cryptography services for data protection."""
-from cryptography.fernet import Fernet
-from app.config import get_settings
+
 import base64
+import hmac
 import os
+
+from cryptography.fernet import Fernet
+
+from app.config import get_settings
 
 settings = get_settings()
 
-class CryptoService:
-    """Service for handling encryption and decryption."""
 
+class CryptoService:
     def __init__(self):
-        # Инициализация Master Key
-        self.master_fernet = Fernet(settings.master_key.encode())
+        derived_master_key = self._derive_master_key(settings.master_key.encode())
+        self.master_fernet = Fernet(base64.urlsafe_b64encode(derived_master_key))
+
+    def _derive_master_key(self, master_key: bytes) -> bytes:
+        """Derives the actual master key using SECRET_KEY as a salt."""
+        return hmac.new(
+            settings.secret_key.encode(), master_key, digestmod="sha256"
+        ).digest()
 
     def generate_data_key(self) -> tuple[bytes, bytes]:
         """
@@ -37,5 +46,5 @@ class CryptoService:
         fernet = self.decrypt_data_key(encrypted_key)
         return fernet.decrypt(encrypted_value).decode()
 
-# Singleton instance
+
 crypto_service = CryptoService()

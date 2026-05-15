@@ -7,4 +7,16 @@ pydantic-settings==2.1.0
 python-dotenv==1.0.0
 cryptography==42.0.0
 python-multipart==0.0.6
+Jinja2==3.1.6
 bcrypt==4.1.2  # Используем напрямую, без passlib
+
+# Rate limiting
+slowapi==0.1.9
+
+# Dev dependencies
+flake8==7.0.0
+black==24.1.1
+isort==5.13.2
+
+requests==2.31.0
+aiohttp==3.9.3

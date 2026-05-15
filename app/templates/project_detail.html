@@ -1,0 +1,333 @@
+{% extends "base_cyberterminal.html" %}
+
+{% block title %}{{ project.name }} // SafeVault{% endblock %}
+
+{% block content %}
+
+<!-- Хлебные крошки и заголовок -->
+<div class="mb-8">
+    <div class="text-sm text-gray-500 mb-2 font-mono">
+        <a href="/dashboard" class="hover:text-green-500 transition-colors">HOME</a> 
+        <span class="mx-2">/</span> 
+        <span class="text-gray-400">PROJECT:</span> 
+        <span class="text-green-400">{{ project.name }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-white flex items-center">
+            <i class="fas fa-database mr-3 text-green-500"></i> 
+            {{ project.name|upper }}
+        </h1>
+        <span class="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded border border-gray-700">
+            ID: {{ project.id }}
+        </span>
+    </div>
+    <p class="text-gray-500 mt-2 text-sm">// {{ project.description or "Description not set" }}</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Колонка 1: Список секретов -->
+    <div class="lg:col-span-2">
+        <div class="panel overflow-hidden">
+            <!-- Header таблицы -->
+            <div class="bg-gray-900/50 px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                <span class="text-gray-400 text-sm font-bold tracking-wider">SECRET VARIABLES</span>
+                <span id="secret-count" class="text-xs bg-green-900 text-green-400 px-2 py-0.5 rounded">{{ secrets|length }} ITEMS</span>
+            </div>
+
+            <!-- Список секретов (HTMX Target) -->
+            <div id="secrets-list" class="divide-y divide-gray-800">
+                {% include "partials/_secrets_list.html" %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Колонка 2: Форма добавления -->
+    <div class="lg:col-span-1">
+        <div class="panel p-6 sticky top-24 backdrop-blur-sm bg-opacity-80">
+            <h3 class="text-lg font-bold text-green-400 mb-6 border-b border-gray-700 pb-2">
+                <i class="fas fa-plus-circle mr-2"></i>ADD SECRET
+            </h3>
+
+            <!-- HTMX Форма добавления -->
+            <form hx-post="/add-secret/{{ project.id }}" 
+                  hx-target="#secrets-list" 
+                  hx-swap="innerHTML"
+                  hx-on::after-request="if(event.detail.successful) this.reset(); showToast('Secret saved successfully', 'success');"
+                  class="space-y-4">
+                
+                <!-- Инъекция API Key для HTMX (скрытое поле не нужно, используем заголовок) -->
+                <!-- Но так как мы используем Cookie авторизацию, HTMX автоматически отправит куки -->
+
+                <div>
+                    <label class="block text-gray-500 text-xs mb-1 uppercase tracking-wider">Key Name</label>
+                    <input type="text" name="key" required placeholder="e.g. API_KEY"
+                           class="input-terminal">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-500 text-xs mb-1 uppercase tracking-wider">Value</label>
+                    <textarea name="value" required rows="4" placeholder="secret_value_here..."
+                              class="input-terminal text-sm"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-gray-500 text-xs mb-1 uppercase tracking-wider">Description (Opt)</label>
+                    <input type="text" name="description" placeholder="What is this for?"
+                           class="input-terminal text-sm">
+                </div>
+
+                <button type="submit" class="btn-terminal w-full">
+                    <i class="fas fa-save mr-2"></i> SAVE SECURELY
+                </button>
+            </form>
+        </div>
+
+        <!-- ... конец формы добавления ... -->
+            
+        <!-- Опасная зона -->
+        <div class="mt-8 pt-6 border-t border-red-900/50">
+            <h4 class="text-xs text-gray-500 uppercase tracking-wider mb-3">Danger Zone</h4>
+            <button onclick="openDeleteProjectModal('{{ project.id }}', '{{ project.name }}')" 
+                    class="w-full bg-gray-900 border border-red-800 text-red-500 hover:bg-red-900 hover:text-white font-bold py-2 px-4 rounded transition-colors text-sm">
+                <i class="fas fa-skull-crossbones mr-2"></i> DELETE PROJECT
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Кастомные UI Элементы -->
+
+<!-- 1. Toast Container -->
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2"></div>
+
+<!-- 2. Modal Template (Delete Confirmation) -->
+<div id="delete-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="panel w-full max-w-sm p-6 relative border-red-500/30 border">
+        <div class="text-center">
+            <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
+            <h3 class="text-xl font-bold text-white mb-2">CONFIRM DELETE</h3>
+            <p class="text-gray-400 text-sm mb-6">Are you sure you want to delete this secret? This action cannot be undone.</p>
+            
+            <div class="flex space-x-4">
+                <button onclick="closeDeleteModal()" class="w-1/2 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors">
+                    CANCEL
+                </button>
+                <button id="confirm-delete-btn" class="w-1/2 py-2 bg-red-600 hover:bg-red-500 rounded text-white font-bold transition-colors">
+                    DELETE
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Delete Project -->
+<div id="delete-project-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="panel w-full max-w-md p-6 relative border-red-500/50 border">
+        <h3 class="text-xl font-bold text-red-500 mb-4 flex items-center">
+            <i class="fas fa-radiation mr-2"></i> CRITICAL OPERATION
+        </h3>
+        <p class="text-gray-300 mb-2">You are about to delete project:</p>
+        <p id="delete-project-name" class="text-white font-bold text-lg mb-4 bg-gray-900 p-2 rounded"></p>
+        
+        <p class="text-red-400 text-sm mb-4">This will permanently delete all associated secrets. This cannot be undone.</p>
+        
+        <!-- Форма подтверждения имени (Protection) -->
+        <div class="mb-4">
+            <label class="block text-gray-400 text-sm mb-2">Type project name to confirm:</label>
+            <input type="text" id="confirm-project-name-input" class="input-terminal" placeholder="Project name...">
+        </div>
+
+        <div class="flex space-x-4">
+            <button onclick="closeDeleteProjectModal()" class="w-1/2 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors">
+                CANCEL
+            </button>
+            <button id="confirm-delete-project-btn" onclick="submitDeleteProject()" disabled 
+                    class="w-1/2 py-2 bg-red-900 text-gray-500 rounded font-bold transition-colors cursor-not-allowed">
+                DELETE FOREVER
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипты -->
+<script>
+    // --- TOAST SYSTEM ---
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        
+        let bgColor, icon;
+        if (type === 'success') {
+            bgColor = 'bg-green-900/90 border-green-500';
+            icon = 'fa-check-circle';
+        } else if (type === 'error') {
+            bgColor = 'bg-red-900/90 border-red-500';
+            icon = 'fa-times-circle';
+        } else {
+            bgColor = 'bg-gray-800/90 border-gray-500';
+            icon = 'fa-info-circle';
+        }
+
+        toast.className = `${bgColor} border text-white px-4 py-3 rounded shadow-lg flex items-center space-x-3 animate-fade-in`;
+        toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+        
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100px)';
+            toast.style.transition = 'all 0.5s ease';
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+
+    // --- DELETE LOGIC ---
+    let currentDeleteUrl = null;
+
+    function openDeleteModal(secretId) {
+        // Используем Web UI endpoint вместо API
+        currentDeleteUrl = `/delete-secret/${secretId}`;
+        document.getElementById('delete-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('delete-modal').classList.add('hidden');
+        currentDeleteUrl = null;
+    }
+
+    // Подключение события на кнопку подтверждения
+    document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+        if (!currentDeleteUrl) return;
+
+        try {
+            const response = await fetch(currentDeleteUrl, {
+                method: 'POST',
+                headers: {
+                    // FastAPI сессия использует куки, но API требует X-API-Key
+                    // Берем ключ из куки или мета-тега (добавьте мета-тег, если нужно)
+                    // Для упрощения, так как мы в зоне авторизованного UI, можно ожидать, что куки хватит
+                    // Но наш API требует заголовок. Простейший хак для Web UI:
+                    "X-API-Key": getCookie("api_key") 
+                }
+            });
+
+            if (response.ok) {
+                showToast('Secret deleted', 'success');
+                // Обновляем список секретов через HTMX trigger или location reload
+                // Самый простой способ в HTMX - триггернуть событие обновления
+                htmx.trigger('#secrets-list', 'refresh-secrets');
+                // Или просто перезагрузка части страницы. Давайте просто перезагрузим страницу для надежности MVP
+                window.location.reload(); 
+            } else {
+                showToast('Failed to delete secret', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Connection error', 'error');
+        } finally {
+            closeDeleteModal();
+        }
+    });
+
+    // --- HELPERS ---
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // --- COPY TO CLIPBOARD (Fixed) ---
+    function copyToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text).then(() => {
+                showToast('Secret copied to clipboard', 'success');
+            }).catch(err => {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showToast('Secret copied to clipboard', 'success');
+            } else {
+                showToast('Failed to copy', 'error');
+            }
+        } catch (err) {
+            showToast('Error copying', 'error');
+        }
+        document.body.removeChild(textArea);
+    }
+
+        // --- DELETE PROJECT LOGIC ---
+    let currentProjectDeleteUrl = null;
+
+    function openDeleteProjectModal(projectId, projectName) {
+        currentProjectDeleteUrl = `/delete-project/${projectId}`;
+        document.getElementById('delete-project-name').innerText = projectName;
+        document.getElementById('delete-project-modal').classList.remove('hidden');
+        
+        // Вешаем слушатель на инпут для проверки имени
+        const input = document.getElementById('confirm-project-name-input');
+        const btn = document.getElementById('confirm-delete-project-btn');
+        
+        input.value = ''; // Очищаем прошлый ввод
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.classList.remove('bg-red-600', 'hover:bg-red-500');
+
+        input.oninput = () => {
+            if (input.value === projectName) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.classList.add('bg-red-600', 'hover:bg-red-500', 'text-white');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.classList.remove('bg-red-600', 'hover:bg-red-500', 'text-white');
+            }
+        };
+    }
+
+    function closeDeleteProjectModal() {
+        document.getElementById('delete-project-modal').classList.add('hidden');
+    }
+
+    function submitDeleteProject() {
+        // Создаем форму и отправляем
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = currentProjectDeleteUrl;
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+</script>
+
+<style>
+    /* Простая анимация для Toast */
+    .animate-fade-in {
+        animation: fadeIn 0.5s forwards;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(100px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+</style>
+
+{% endblock %}

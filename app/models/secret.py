@@ -1,39 +1,39 @@
-"""Pydantic модели для сущности Secret."""
-from pydantic import BaseModel, Field
-from typing import Optional
+"""Pydantic models for Secret entity."""
+
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class SecretBase(BaseModel):
-    """Базовая модель секрета."""
+    """Base model for Secret."""
+
     key: str = Field(..., description="Название переменной (например, API_KEY)")
     value: str = Field(..., description="Значение секрета (будет зашифровано)")
-    description: Optional[str] = Field(None, description="Описание для чего нужен секрет")
+    description: Optional[str] = Field(
+        None, description="Описание для чего нужен секрет"
+    )
+
 
 class SecretCreate(SecretBase):
-    """Модель для создания секрета."""
+    """Model for creating a secret."""
+
     pass
 
+
 class SecretUpdate(BaseModel):
-    """Модель для обновления секрета."""
+    """Model for updating a secret."""
+
     value: str
     description: Optional[str] = None
 
-class SecretInDB(BaseModel):
-    """Модель секрета, хранящаяся в БД (с метаданными)."""
-    id: str = Field(alias="_id")
-    project_id: str
-    key: str
-    encrypted_value: bytes
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        populate_by_name = True
-        # Для корректного отображения байтов в JSON при отладке
-        json_encoders = {bytes: lambda v: "<encrypted>"}
 
 class SecretResponse(BaseModel):
-    """Модель ответа для клиента (расшифрованное значение)."""
+    """Model for response to client (decrypted value)."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str
     project_id: str
     key: str

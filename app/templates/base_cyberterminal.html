@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CyberTerminal{% endblock %}</title>
+    
+    <!-- STYLES -->
+    <!-- Tailwind CSS CDN (Logic) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Our Custom Theme (Skin) -->
+    <link rel="stylesheet" href="/static/css/styles_cyberterminal.css">
+    
+    <!-- LIBS -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind Config Extension -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        terminal: '#0d1117',
+                        panel: '#161b22',
+                        accent: '#238636'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- NAVIGATION -->
+    <nav class="nav-terminal">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-terminal neon-text text-xl"></i>
+            <span class="text-xl font-bold text-white">{% block project_name %}SYSTEM{% endblock %}</span>
+        </div>
+        <div class="flex items-center space-x-4 text-sm">
+            <span class="text-gray-500">STATUS: <span class="text-green-500">ONLINE</span></span>
+            {% block nav_actions %}
+            <a href="/logout" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-power-off"></i></a>
+            {% endblock %}
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow container mx-auto p-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-gray-800 p-4 text-center text-xs text-gray-600">
+        &copy; 2026 CyberTerminal Systems // Secure Infrastructure
+    </footer>
+
+    <!-- SCRIPTS -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

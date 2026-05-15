@@ -1,0 +1,38 @@
+{% extends "base_cyberterminal.html" %}
+
+{% block title %}Login // SafeVault{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center h-full">
+    <div class="w-full max-w-md p-8 panel relative overflow-hidden">
+        
+        <!-- Decorative Window Header -->
+        <div class="window-header">
+            <div class="window-dots dot-red"></div>
+            <div class="window-dots dot-yellow"></div>
+            <div class="window-dots dot-green"></div>
+            <span class="ml-2 text-xs text-gray-500">secure_login.sh</span>
+        </div>
+
+        <div class="mt-8">
+            <h1 class="text-2xl font-bold mb-6 text-center">AUTHENTICATION REQUIRED</h1>
+            
+            {% if error %}
+            <div class="bg-red-900/20 border border-red-500 text-red-400 p-3 mb-4 rounded text-sm">
+                <i class="fas fa-exclamation-triangle mr-2"></i> {{ error }}
+            </div>
+            {% endif %}
+
+            <form action="/login" method="POST" class="space-y-6">
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">API ACCESS KEY:</label>
+                    <input type="password" name="api_key" required class="input-terminal" placeholder="sv_live_...">
+                </div>
+                <button type="submit" class="btn-terminal w-full">
+                    <i class="fas fa-unlock mr-2"></i> CONNECT
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

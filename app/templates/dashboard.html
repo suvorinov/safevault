@@ -1,0 +1,79 @@
+{% extends "base_cyberterminal.html" %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-white">PROJECTS INDEX</h1>
+        <p class="text-gray-500 text-sm mt-1">// List of secure containers</p>
+    </div>
+    <button onclick="document.getElementById('create-modal').classList.remove('hidden')" 
+            class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded flex items-center space-x-2 transition-colors">
+        <i class="fas fa-plus"></i>
+        <span>NEW PROJECT</span>
+    </button>
+</div>
+
+<!-- Сетка проектов -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for proj in projects %}
+    <div class="bg-panel border border-gray-800 rounded-lg p-5 hover:border-green-500 transition-all duration-300 group cursor-pointer"
+         onclick="window.location='/project/{{ proj.id }}'">
+        <div class="flex justify-between items-start mb-3">
+            <i class="fas fa-folder text-4xl text-gray-600 group-hover:text-green-500 transition-colors"></i>
+            <span class="text-xs text-gray-600 font-mono">ID: {{ proj.id[:6] }}...</span>
+        </div>
+        <h2 class="text-xl font-bold text-white mb-1 group-hover:text-green-400 transition-colors">{{ proj.name }}</h2>
+        <p class="text-gray-500 text-sm truncate">{{ proj.description or "No description" }}</p>
+        <div class="mt-4 pt-4 border-t border-gray-800 flex justify-end text-xs text-gray-600">
+            <i class="fas fa-clock mr-1"></i> {{ proj.created_at.strftime('%Y-%m-%d') }}
+        </div>
+    </div>
+    {% else %}
+    <div class="col-span-3 text-center text-gray-600 py-16 border border-dashed border-gray-700 rounded-lg">
+        <i class="fas fa-inbox text-5xl mb-4"></i>
+        <p>NO PROJECTS FOUND. INITIATE CREATION SEQUENCE.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Модальное окно создания (HTMX в действии) -->
+<div id="create-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-panel border border-gray-700 rounded-lg w-full max-w-md p-6 relative">
+        <button onclick="document.getElementById('create-modal').classList.add('hidden')" 
+                class="absolute top-4 right-4 text-gray-500 hover:text-white">
+            <i class="fas fa-times"></i>
+        </button>
+        <h3 class="text-xl font-bold mb-4 neon-text"><i class="fas fa-terminal mr-2"></i>NEW PROJECT</h3>
+        
+        <form hx-post="/api/v1/projects/" 
+              hx-ext="json-enc" 
+              hx-target="#projects-list" 
+              hx-swap="innerHTML"
+              hx-on::after-request="document.getElementById('create-modal').classList.add('hidden')">
+            <!-- HTMX требует установки заголовка авторизации. 
+                 Так как HTMX работает через AJAX, нам нужно передать API Key.
+                 Проще всего сделать это через JS или мета-тег. -->
+            
+            <!-- Для KISS сделаем обычную отправку формы с перенаправлением, 
+                 но если хотите HTMX, нужно написать JS скрипт для инъекции заголовка. 
+                 Давайте пока оставим обычную форму с перезагрузкой для простоты MVP. -->
+        </form>
+        
+        <!-- Упрощенная форма (обычная POST) -->
+        <form action="/create-project" method="POST">
+             <div class="mb-4">
+                <label class="block text-gray-400 text-sm mb-2">PROJECT NAME:</label>
+                <input type="text" name="name" required class="w-full bg-gray-900 border border-gray-700 rounded p-3 text-white focus:border-green-500 outline-none">
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-400 text-sm mb-2">DESCRIPTION:</label>
+                <textarea name="description" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded p-3 text-white focus:border-green-500 outline-none"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded transition-colors">
+                CREATE CONTAINER
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeVault // TERMINAL</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX CDN -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Fira Code', monospace;
+            background-color: #0d1117;
+            color: #c9d1d9;
+        }
+        /* Неоновое свечение для элементов */
+        .neon-border {
+            border: 1px solid #30363d;
+            box-shadow: 0 0 5px #238636, inset 0 0 5px rgba(35, 134, 54, 0.1);
+        }
+        .neon-text {
+            color: #3fb950;
+            text-shadow: 0 0 5px #3fb950;
+        }
+        /* Скроллбар в стиле терминала */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d1117; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d; 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <nav class="border-b border-gray-800 p-4 flex justify-between items-center bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-terminal neon-text text-xl"></i>
+            <span class="text-xl font-bold text-white">SAFE<span class="neon-text">VAULT</span></span>
+        </div>
+        <div class="flex items-center space-x-4 text-sm">
+            <span class="text-gray-500">STATUS: <span class="text-green-500">ONLINE</span></span>
+            <a href="/logout" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-power-off"></i></a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto p-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 p-4 text-center text-xs text-gray-600">
+        &copy; 2026 SafeVault Systems // Self-Hosted Security
+    </footer>
+
+    <script>
+        // Кастомные конфиги Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        terminal: '#0d1117',
+                        panel: '#161b22',
+                        accent: '#238636'
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
